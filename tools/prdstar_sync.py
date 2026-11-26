@@ -392,6 +392,9 @@ def cmd_apply(a):
     w = a.work; cfg = config(); st = read_state(a.ms_dir)
     if st.get('url') and st['url'] != cfg['url'] and not a.force:
         die('이 마일스톤은 다른 PRDstar(%s)에 연결돼 있어요. prdstar.config.json(%s)을 확인하세요.' % (st['url'], cfg['url']), 3)
+    meta = jload(os.path.join(w, 'mine', 'meta.json'), {}) or {}
+    if meta.get('deployedAt'):
+        die('배포 완료된 마일스톤(%s)이라 올리지 않아요. 바꿀 내용은 새 마일스톤으로 만드세요.' % meta['deployedAt'], 4)
     errs, _ = check_dir(a.ms_dir, cfg)
     if errs: die('형식 오류가 있어 멈췄어요:\n  ' + '\n  '.join(errs))
     repo = read_milestone(a.ms_dir)

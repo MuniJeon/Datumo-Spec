@@ -48,8 +48,11 @@ tools/prdstar/        PRDstar 저장 도구·규칙 사본 (milestone-doc-work �
 |---|---|
 | 제목 · 영역 · 상태 · 요약 · 담당 · Notion/Figma 링크 | 보드 화면 · 영역(marks) · 도형 · 대표 화면 |
 | Background 섹션 본문 | Final Design 데모 · Design Brief 링크 |
-| 명세 목록 · 순서 · 경로 · 설명, 정책 코드 · 제목 · 본문 | Q&A, 정책 버전 · Changelog(배포 후 push 때 자동), 배포 완료 처리 |
+| 명세 목록 · 순서 · 경로 · 설명, 정책 코드 · 제목 · 본문 | Q&A |
 | | AI용 텍스트 명세(페이지가 만듦 → `devspec.md`로 받기만) |
+| | 배포 완료 처리(그 뒤로 마일스톤 잠금) |
+
+**배포 완료된 마일스톤은 잠겨요.** 복제본 페이지에서 고칠 수 없고(보기 · Q&A만), `apply`도 올리지 않아요(exit 4). 바꿀 내용은 새 마일스톤으로 만든다.
 
 도구가 하는 일: `apply`는 PRDstar 현재 내용 위에 레포 글만 얹고, 마지막 동기화 뒤 **PRDstar에서 바뀐 글이 레포와 다르면 멈춘다**(exit 3). 그때는 pull로 받아 git diff로 합친 뒤 다시 push한다.
 
@@ -63,7 +66,7 @@ ArtifactData `list`의 `out_dir` 파일에는 문서 버전이 없다. **list �
    - `.prdstar.json`에 `msId`가 없으면(처음): `python3 tools/prdstar_sync.py init milestones/<slug> -o $W/w` → 출력 `listDoc`을 ArtifactData `set`(url=$U, collection `ms`, doc_id, data).
    - 있으면: ArtifactData `list`(url=$U, collection `ms/<msId>/d`, query `{"limit":1000}`, out_dir `$W/dl`) → 결과 글을 `$W/listing.txt`에 저장 → `python3 tools/prdstar_sync.py prep $W/dl --listing $W/listing.txt -o $W/w`. 문서가 0개면(PRDstar에서 지워짐) 사람에게 묻고 `init`으로 다시 만든다.
 3. `python3 tools/prdstar_sync.py apply milestones/<slug> $W/w` — `changed`가 요청과 맞는지 본다. 요청과 상관없는 항목이 있으면 멈추고 원인을 찾는다. exit 3이면 멈추고 충돌 항목을 사람에게 알린다(`--force`는 사람이 PRDstar 쪽 변경을 버리라고 할 때만).
-4. `python3 tools/prdstar/prdstar.py push $W/w -o $W/plan --by "<요청자 이름>"` — 배포 후 마일스톤이면 `changelog_added`(새 정책 버전)를 확인한다.
+4. `python3 tools/prdstar/prdstar.py push $W/w -o $W/plan --by "<요청자 이름>"` — 배포 완료된 마일스톤은 3단계(`apply`)에서 이미 멈춘다.
 5. `python3 tools/prdstar_sync.py batches $W/plan $W/w` → 줄마다 ArtifactData `batch`(url=$U, writes=그 줄). 버전이 맞지 않아 거절되면 2단계부터 다시 한다(사람이 그 사이 고친 것).
 6. 목록 문서: ArtifactData `get`(collection `ms`, doc_id msId) → `update`(data=apply 출력 `listPatch`, if_version). 처음 만든 경우는 2단계에서 이미 썼으니 건너뛴다.
 7. `python3 tools/prdstar_sync.py mark-synced milestones/<slug> $W/w`
